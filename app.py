@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime
 from app_utils import load_dataset, basic_stats, detect_outliers, zscore_outliers, summarize_text_counts
 
@@ -70,7 +69,7 @@ with st.sidebar:
         max_d = pd.to_datetime(df[date_col]).max()
         start, end = st.date_input("Date range", value=(min_d.date(), max_d.date()), min_value=min_d.date(), max_value=max_d.date())
         if isinstance(start, tuple):
-            start, end = start  # streamlit older versions quirk
+            start, end = start  # older Streamlit quirk
         df = df[(df[date_col] >= pd.to_datetime(start)) & (df[date_col] <= pd.to_datetime(end) + pd.Timedelta(days=1))]
     else:
         st.caption("No parsed date column found; date filters disabled.")
@@ -83,7 +82,6 @@ with st.sidebar:
         df = df[(df[amount_col_guess] >= lo) & (df[amount_col_guess] <= hi)]
 
     # Category-like filters
-    multi_filters = {}
     for c in ["category", "merchant", "payment_method", "account_type", "transaction_type"]:
         if c in df.columns:
             vals = sorted([v for v in df[c].dropna().astype(str).unique()])
@@ -121,11 +119,12 @@ with row1_col1:
         st.plotly_chart(fig, use_container_width=True)
 with row1_col2:
     if "category" in df.columns:
-        cat_sum = df.groupby("category")[amount_col_guess].sum().reset_index().sort_values(amount_col_guess, ascending=False) if amount_col_guess else df["category"].value_counts().reset_index(names=["category","count"])
         if amount_col_guess:
+            cat_sum = df.groupby("category")[amount_col_guess].sum().reset_index().sort_values(amount_col_guess, ascending=False)
             fig = px.bar(cat_sum.head(15), x="category", y=amount_col_guess, title="Top Categories by Amount")
         else:
-            fig = px.bar(cat_sum.head(15), x="category", y="count", title="Top Categories by Count")
+            counts = df["category"].value_counts().reset_index(names=["category","count"])
+            fig = px.bar(counts.head(15), x="category", y="count", title="Top Categories by Count")
         st.plotly_chart(fig, use_container_width=True)
 
 # Merchant performance
@@ -167,33 +166,122 @@ with st.expander("🚨 Outlier Detection (advanced)"):
         st.write(f"Found **{len(flagged)}** potential outliers.")
         if len(flagged) > 0:
             st.dataframe(flagged.head(200), use_container_width=True)
-            fig = px.scatter(df, x=amount_col_guess, y=df.index, color=mask.map({True: "Outlier", False: "Normal"}), title="Outlier Scatter (index vs amount)")
+            fig = px.scatter(
+                df,
+                x=amount_col_guess,
+                y=df.index,
+                color=mask.map({True: "Outlier", False: "Normal"}),
+                title="Outlier Scatter (index vs amount)"
+            )
             st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No numeric amount-like column detected.")
+        
+# =========================
+# 🤖 OpenAI Insights Chatbot (OpenAI SDK only)
+# =========================
+from openai import OpenAI
 
-# Mock Insights Chat (simple rules)
-with st.expander("🤖 Mock Insights Chat"):
-    q = st.text_input("Ask a question about the data (e.g., 'Which category is highest?')")
-    if q:
-        ql = q.lower()
-        answer = None
-        if "highest category" in ql or ("highest" in ql and "category" in ql):
-            if "category" in df.columns and amount_col_guess:
-                topcat = df.groupby("category")[amount_col_guess].sum().idxmax()
-                answer = f"Top category by amount is **{topcat}**."
-        elif "largest merchant" in ql or ("top merchant" in ql):
-            if "merchant" in df.columns and amount_col_guess:
-                topm = df.groupby("merchant")[amount_col_guess].sum().idxmax()
-                answer = f"Largest merchant by spend is **{topm}**."
-        elif "total" in ql:
-            if amount_col_guess:
-                answer = f"Total amount in the current view: **{df[amount_col_guess].sum():,.2f}**."
-        elif "average" in ql or "avg" in ql or "mean" in ql:
-            if amount_col_guess:
-                answer = f"Average amount in the current view: **{df[amount_col_guess].mean():,.2f}**."
-        else:
-            answer = "Sorry, I only handle a few patterns in this mock demo (highest category, top merchant, total, average)."
-        st.success(answer)
+with st.sidebar:
+    st.subheader("🤖 Insights Chatbot")
+    openai_api_key = st.text_input(
+        "OpenAI API Key",
+        type="password",
+        help="Paste a key with access to GPT-4o/GPT-4o-mini or compatible."
+    )
 
-st.caption("Built with Streamlit • Plotly • scikit-learn")
+st.markdown("---")
+st.header("🤖 AI Insights Chat")
+st.caption("Ask data questions. The chatbot will reason over the current filtered view (not the entire dataset).")
+
+def _profile_dataframe_for_llm(df_view: pd.DataFrame, amount_col_guess: str | None, date_col: str | None) -> str:
+    parts = []
+    parts.append(f"Rows in current view: {len(df_view)}")
+    parts.append(f"Columns: {', '.join(map(str, df_view.columns))}")
+    if amount_col_guess:
+        total = float(df_view[amount_col_guess].sum())
+        mean = float(df_view[amount_col_guess].mean()) if len(df_view) > 0 else float('nan')
+        p95 = float(df_view[amount_col_guess].quantile(0.95)) if len(df_view) > 0 else float('nan')
+        parts.append(f"Amount stats: total={total:,.2f}, mean={mean:,.2f}, p95={p95:,.2f}")
+    if date_col and np.issubdtype(df_view[date_col].dtype, np.datetime64):
+        dmin = pd.to_datetime(df_view[date_col]).min()
+        dmax = pd.to_datetime(df_view[date_col]).max()
+        parts.append(f"Date range: {dmin.date()} to {dmax.date()}")
+    for col in ["category", "merchant", "payment_method", "account_type", "transaction_type"]:
+        if col in df_view.columns:
+            top_vals = df_view[col].value_counts().head(5).to_dict()
+            parts.append(f"Top {col} by count: {top_vals}")
+    if amount_col_guess:
+        for col in ["category", "merchant"]:
+            if col in df_view.columns:
+                top_amt = (
+                    df_view.groupby(col)[amount_col_guess].sum().sort_values(ascending=False).head(5).to_dict()
+                )
+                parts.append(f"Top {col} by total amount: {top_amt}")
+    return "\n".join(parts)
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []  # [{"role": "user"/"assistant", "content": "..."}]
+
+with st.form("insights_chat_form", clear_on_submit=True):
+    user_q = st.text_area("Ask a question (e.g., 'What categories are driving spend growth? Suggest 3 actions.')", "")
+    submitted_chat = st.form_submit_button("Send")
+
+if submitted_chat and user_q.strip():
+    st.session_state.chat_history.append({"role": "user", "content": user_q.strip()})
+
+# Render chat so far
+for msg in st.session_state.chat_history:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+def _build_messages(context: str, history: list[dict]):
+    system_prompt = f"""
+You are an analytics copilot embedded in a Streamlit dashboard. The user is exploring a filtered view of a transactions dataset.
+Use the provided CONTEXT (profile of the current filtered DataFrame) to answer questions and propose **actionable insights**.
+When relevant, include:
+- bullets with concise findings,
+- at most 3 suggested next actions,
+- optional pandas snippets the user could run to reproduce a metric/chart.
+
+CONTEXT:
+{context}
+
+Guidelines:
+- If asked for totals/averages, compute from CONTEXT numbers where possible (they may be partial summaries). If insufficient, explain assumptions.
+- If asked for anomalies/outliers, discuss plausible factors and how to validate.
+- Keep answers crisp; prefer lists over long paragraphs.
+- Never invent columns that are not in the context.
+- Currency is not specified: speak in generic 'amount' terms.
+"""
+    msgs = [{"role": "system", "content": system_prompt}]
+    msgs.extend(history[-8:])  # last 8 turns
+    return msgs
+
+def call_llm_openai(messages: list[dict], api_key: str, model: str = "gpt-4o-mini", temperature: float = 0.4) -> str:
+    client = OpenAI(api_key=api_key)
+    resp = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+    )
+    return resp.choices[0].message.content
+
+# Only call OpenAI when key is provided and there is at least one user message
+if any(m["role"] == "user" for m in st.session_state.chat_history):
+    if not openai_api_key:
+        with st.chat_message("assistant"):
+            st.info("Add your OpenAI API key in the sidebar to enable the AI chatbot.")
+    else:
+        try:
+            context = _profile_dataframe_for_llm(df, amount_col_guess, date_col)
+            messages = _build_messages(context, st.session_state.chat_history)
+            reply_text = call_llm_openai(messages, api_key=openai_api_key, model="gpt-4o-mini", temperature=0.4)
+            st.session_state.chat_history.append({"role": "assistant", "content": reply_text})
+
+            with st.chat_message("assistant"):
+                st.markdown(reply_text)
+
+        except Exception as e:
+            with st.chat_message("assistant"):
+                st.error(f"Chat error: {e}")

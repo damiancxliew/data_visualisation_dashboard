@@ -58,5 +58,8 @@ def summarize_text_counts(df: pd.DataFrame, text_col: str, top_n: int = 20):
         .str.replace(r"[^a-z0-9\s]", " ", regex=True)
         .str.split()
         .explode()
+        .dropna()
     )
-    return tokens.value_counts().head(top_n).reset_index(names=[text_col, "count"])
+    vc = tokens.value_counts().head(top_n)
+    # Give the index a proper name, and the counts a simple string column name
+    return vc.rename_axis(text_col).reset_index(name="count")
