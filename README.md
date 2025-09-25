@@ -7,9 +7,9 @@ An interactive Streamlit dashboard to explore a financial transactions dataset.
 -   **Filters**: date range, amount range, category, merchant, payment method, account type, transaction type
 -   **KPIs**: #transactions, total amount, average amount, #categories
 -   **Charts**: daily time series, amount histogram, top categories/merchants, payment-method pie
--   **Text insights**: top words from `description`
--   **Advanced**: outlier detection (Isolation Forest / Z-score)
--   **Optional**: OpenAI-powered **Insights Chatbot** that uses the **current filtered view** to suggest actionable insights
+-   **Text Insights**: top words from `description`
+-   **Outlier Detection**: outlier detection (Isolation Forest / Z-score)
+-   **AI Insights**: OpenAI-powered **Insights Chatbot** that uses the **current filtered view** to suggest actionable insights
 
 ## 🗂 Dataset
 
