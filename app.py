@@ -152,7 +152,7 @@ if "description" in df.columns:
     st.plotly_chart(fig, use_container_width=True)
 
 # Outlier detection
-with st.expander("🚨 Outlier Detection (advanced)"):
+with st.expander("🚨 Outlier Detection"):
     if amount_col_guess:
         method = st.radio("Method", ["Isolation Forest", "Z-score (>|3|)"], horizontal=True)
         if method == "Isolation Forest":
