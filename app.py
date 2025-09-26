@@ -277,7 +277,7 @@ with tab2:
 with tab3:
     st.markdown("### Quick Data Exploration")
     
-    explore_col1, explore_col2 = st.columns(2)
+    explore_col1, explore_col2, explore_col3 = st.columns(3)
     
     with explore_col1:
         st.subheader("🔢 Numeric Distributions")
@@ -297,6 +297,25 @@ with tab3:
                 fig = px.bar(x=value_counts.index, y=value_counts.values,
                            title=f"Top 10 {selected_categorical}")
                 st.plotly_chart(fig, use_container_width=True)
+
+    with explore_col3:
+        # NLP/Text Insights Section
+        st.subheader("📝 Text Insights\n")
+        try:
+            word_counts = summarize_text_counts(df, 'description', top_n=20)
+            # st.caption(f"Top Words in '{selected_text_col}'")
+            fig = px.bar(
+                word_counts,
+                x='description',
+                y="count",
+                title=f"Most Frequent Words in Description",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            st.dataframe(word_counts, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error processing text column: {e}")
+ 
+
 
 # Advanced Analytics Section
 st.markdown("---")
