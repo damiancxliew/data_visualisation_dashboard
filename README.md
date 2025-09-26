@@ -2,6 +2,8 @@
 
 An **interactive Streamlit dashboard** to explore and analyze a financial transactions dataset with **dynamic charting, advanced analytics, and AI-powered insights**.
 
+🌐 **Live Demo:** [data-visualisation-dashboard.streamlit.app](https://data-visualisation-dashboard.streamlit.app/)
+
 ---
 
 ## 🚀 Features
@@ -74,6 +76,11 @@ Place your dataset as `financial_transactions.csv` alongside `app.py`, or upload
 ---
 
 ## ▶️ Quickstart
+
+Try it online without installing anything:  
+👉 [Live Demo on Streamlit Cloud](https://data-visualisation-dashboard.streamlit.app/)
+
+Or run locally:
 
 1. **Clone & Setup Environment**
 
