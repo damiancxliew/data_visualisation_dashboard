@@ -4,3 +4,8 @@ numpy>=1.24
 plotly>=5.22
 scikit-learn>=1.3
 openai>=1.40.0
+seaborn
+matplotlib
+seaborn
+reportlab>=3.6
+kaleido>=0.2

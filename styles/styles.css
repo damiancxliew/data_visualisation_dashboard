@@ -1,0 +1,50 @@
+/* styles.css */
+.metric-card {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    padding: 1rem;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+/* Selectbox / Multiselect (BaseWeb) tweaks */
+.stSelectbox > div > div > div {
+    background-color: white !important;
+    color: #262730 !important;
+}
+
+.stSelectbox > div > div > div > div {
+    color: #262730 !important;
+}
+
+.stMultiSelect > div > div > div {
+    background-color: white !important;
+    color: #262730 !important;
+}
+
+div[data-baseweb="select"] > div {
+    background-color: white !important;
+    color: #262730 !important;
+}
+
+div[data-baseweb="menu"] {
+    background-color: white !important;
+}
+
+div[data-baseweb="menu"] li {
+    color: #262730 !important;
+    background-color: white !important;
+}
+
+div[data-baseweb="menu"] li:hover {
+    background-color: #f0f2f6 !important;
+}
+
+.plot-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: #fafafa;
+}
