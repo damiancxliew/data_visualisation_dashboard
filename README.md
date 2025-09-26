@@ -1,34 +1,120 @@
-# Financial Transactions – Interactive Dashboard
+# 💳 Financial Transactions – Interactive Dashboard
 
-An interactive Streamlit dashboard to explore a financial transactions dataset.
+An **interactive Streamlit dashboard** to explore and analyze a financial transactions dataset with **dynamic charting, advanced analytics, and AI-powered insights**.
 
-## 📦 Features
+---
 
--   **Filters**: date range, amount range, category, merchant, payment method, account type, transaction type
--   **KPIs**: #transactions, total amount, average amount, #categories
--   **Charts**: daily time series, amount histogram, top categories/merchants, payment-method pie
--   **Text Insights**: top words from `description`
--   **Outlier Detection**: outlier detection (Isolation Forest / Z-score)
--   **AI Insights**: OpenAI-powered **Insights Chatbot** that uses the **current filtered view** to suggest actionable insights
+## 🚀 Features
 
-## 🗂 Dataset
+-   **Data Loading**
 
-Place your CSV as `financial_transactions.csv` alongside `app.py`, or upload via the UI.
+    -   Upload any CSV file or use the bundled `financial_transactions.csv`
+    -   Auto-detects **date** and **amount** columns by name
 
-**Expected columns (flexible):**
+-   **Filters**
+
+    -   Global sidebar filters for **date range**, **numeric ranges**, and **categories**
+    -   Apply filters dynamically across all charts
+
+-   **KPIs / Quick Insights**
+
+    -   Total rows, total columns, #numeric vs. #categorical
+    -   Sum, mean, median displayed as metrics
+
+-   **Custom Chart Builder**
+
+    -   **Single Chart Builder**: create one visualization at a time
+    -   **Multi-Chart Dashboard**: build and save multiple charts, rendered side by side
+    -   Supported chart types:
+        `Bar`, `Line`, `Scatter`, `Pie`, `Box`, `Histogram`, `Heatmap`
+
+-   **Quick Explore**
+
+    -   One-click exploration of **numeric distributions** and **categorical breakdowns**
+
+-   **Advanced Analytics**
+
+    -   **Outlier detection** (Z-Score, IQR, Isolation Forest)
+    -   **Statistical summary** of numeric columns
+
+-   **Export**
+
+    -   **Download Filtered Data** as CSV
+    -   **Generate PDF Report** with:
+
+        -   Summary statistics
+        -   Category/merchant breakdowns
+        -   AI-generated narrative (optional if API key provided)
+
+-   **AI Insights**
+
+    -   **Chatbot** powered by OpenAI (`gpt-4o-mini` by default)
+    -   Context-aware: analyzes the **currently filtered dataset**
+    -   Provides actionable insights, anomaly detection, and recommendations
+    -   Pre-loaded with suggested starter questions
+
+-   **Styling**
+
+    -   External CSS (`styles/styles.css`) for consistent theme
+
+---
+
+## 📂 Dataset
+
+Place your dataset as `financial_transactions.csv` alongside `app.py`, or upload via the UI.
+
+**Expected columns (auto-detected by heuristics, flexible names allowed):**
 
 -   `transaction_id` (string)
 -   `date` (datetime-like)
 -   `amount` (numeric)
 -   `category`, `merchant`, `payment_method`, `account_type`, `transaction_type` (categorical)
--   `description` (text)
+-   `description` (text for NLP insights)
 
-> The app auto-detects date/amount columns by name heuristics.
+---
 
 ## ▶️ Quickstart
 
-1. **(Recommended) Create a virtual environment**
+1. **Clone & Setup Environment**
+
     ```bash
+    git clone https://github.com/damiancxliew/data_visualisation_dashboard.git
+    cd data_visualisation_dashboard
     python -m venv .venv
     source .venv/bin/activate   # Windows: .venv\Scripts\activate
     ```
+
+2. **Install Dependencies**
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. **Run Streamlit**
+
+    ```bash
+    streamlit run app.py
+    ```
+
+---
+
+## 🔑 AI Features
+
+To enable AI insights (chatbot + PDF narrative):
+
+1. Get an **OpenAI API key** from [platform.openai.com](https://platform.openai.com/)
+2. Add it in the Streamlit sidebar under **AI Configuration**
+
+> If no key is provided, the dashboard still runs — you’ll just miss the AI features.
+
+---
+
+## 📘 Tech Stack
+
+-   **Frontend**: [Streamlit](https://streamlit.io/)
+-   **Visualization**: Plotly, Seaborn, Matplotlib
+-   **ML/Analytics**: Scikit-learn (Isolation Forest), NumPy, Pandas
+-   **AI**: OpenAI GPT models (via `openai` package)
+-   **PDF Export**: ReportLab
+
+---
